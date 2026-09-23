@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /null
+Disallow: /api/admin
+
+# 🤖 Hey there, robot. Or curious human.
+# Disallowing /null was intentional.
+# But rules are meant to be understood, not just followed.
+# What happens if you visit /null?

@@ -1,69 +1,362 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+
+// CLUE_01: You're already looking in the right place.
+// The archive is waiting. Try visiting /archive
+
+export default function HomePage() {
+  const [teamName, setTeamName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [phase, setPhase] = useState<"intro" | "register">("intro");
+  const [titleText, setTitleText] = useState("");
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const fullTitle = "THE LOST FILE";
+
+  // Typewriter effect for title
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setTitleText(fullTitle.slice(0, i + 1));
+      i++;
+      if (i >= fullTitle.length) clearInterval(interval);
+    }, 80);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Check if team already exists
+  useEffect(() => {
+    const savedToken = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("team_token="))
+      ?.split("=")[1];
+
+    if (savedToken) {
+      fetch("/api/team", {
+        headers: { "x-team-token": savedToken },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.id) {
+            router.push("/game");
+          }
+        })
+        .catch(() => {});
+    }
+  }, [router]);
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!teamName.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/team", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: teamName.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to register team");
+        return;
+      }
+
+      // Store token in localStorage as backup
+      localStorage.setItem("team_token", data.token);
+      localStorage.setItem("team_name", data.name);
+      // Cookie is set server-side
+
+      router.push("/game");
+    } catch {
+      setError("Connection failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+        background:
+          "radial-gradient(ellipse at 50% 0%, rgba(0, 212, 255, 0.06) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(124, 58, 237, 0.08) 0%, transparent 50%)",
+      }}
+    >
+      {/* Corner decorations */}
+      <CornerDecor />
+
+      <div style={{ maxWidth: "640px", width: "100%", textAlign: "center" }}>
+        {/* Association tag */}
+        <div
+          className="mono"
+          style={{
+            color: "var(--text-muted)",
+            fontSize: "0.7rem",
+            letterSpacing: "0.3em",
+            textTransform: "uppercase",
+            marginBottom: "40px",
+            opacity: 0.8,
+          }}
+        >
+          BLACK BOX ASSOCIATION · INVESTIGATION SYSTEM v1.0
+        </div>
+
+        {/* Main title with glitch */}
+        <div style={{ marginBottom: "12px", position: "relative" }}>
+          <div
+            className="glitch-text"
+            style={{
+              fontSize: "clamp(2.5rem, 8vw, 5rem)",
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              fontFamily: "'JetBrains Mono', monospace",
+              color: "var(--text-primary)",
+              lineHeight: 1,
+            }}
+          >
+            {titleText}
+            {titleText.length < fullTitle.length && (
+              <span style={{ color: "var(--accent-cyan)", animation: "typing-cursor 1s infinite" }}>█</span>
+            )}
+          </div>
+        </div>
+
+        {/* Subtitle */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "16px",
+            marginBottom: "48px",
+          }}
+        >
+          <div style={{ height: "1px", width: "60px", background: "linear-gradient(90deg, transparent, var(--border-dim))" }} />
+          <span
+            className="mono"
+            style={{ color: "var(--accent-cyan)", fontSize: "0.7rem", letterSpacing: "0.2em" }}
+          >
+            DIGITAL INVESTIGATION
+          </span>
+          <div style={{ height: "1px", width: "60px", background: "linear-gradient(90deg, var(--border-dim), transparent)" }} />
+        </div>
+
+        {/* Story text */}
+        <div
+          className="card card-glow animate-fade-in"
+          style={{ marginBottom: "32px", textAlign: "left" }}
+        >
+          {/* Incident log header */}
+          <div
+            className="mono"
+            style={{
+              color: "var(--accent-red)",
+              fontSize: "0.65rem",
+              letterSpacing: "0.2em",
+              marginBottom: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--accent-red)", display: "inline-block", animation: "pulse-glow 2s infinite" }} />
+            INCIDENT LOG · 02:13:47 AM
+          </div>
+
+          <p style={{ color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: "16px" }}>
+            At 02:13 AM, someone accessed the{" "}
+            <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>
+              Black Box Association Archive
+            </span>
+            . One file disappeared. The only thing left behind was this website.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          <p style={{ color: "var(--text-secondary)", lineHeight: 1.8, marginBottom: "16px" }}>
+            The entity known only as{" "}
+            <span className="mono" style={{ color: "var(--accent-cyan)" }}>NULL</span>{" "}
+            left a trail. Nobody knows whether it's an invitation, a warning, or a trap.
+          </p>
+
+          <p style={{ color: "var(--text-primary)", lineHeight: 1.8, fontStyle: "italic" }}>
+            "If you're reading this... perhaps the file wasn't deleted. Perhaps it was{" "}
+            <span style={{ color: "var(--accent-purple)" }}>hidden</span>."
+          </p>
+
+          <div
+            style={{
+              marginTop: "20px",
+              paddingTop: "16px",
+              borderTop: "1px solid var(--border-dim)",
+              color: "var(--accent-green)",
+              fontSize: "0.8rem",
+              fontFamily: "'JetBrains Mono', monospace",
+            }}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            ✓ No cybersecurity experience required.
+            <br />
+            ✓ Everything you need is somewhere on this website.
+          </div>
+        </div>
+
+        {/* Team Registration */}
+        <div className="card animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <div
+            className="mono"
+            style={{
+              color: "var(--text-muted)",
+              fontSize: "0.65rem",
+              letterSpacing: "0.2em",
+              marginBottom: "20px",
+            }}
           >
-            Documentation
+            TEAM REGISTRATION
+          </div>
+
+          <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div>
+              <label
+                htmlFor="teamName"
+                className="mono"
+                style={{
+                  display: "block",
+                  color: "var(--text-secondary)",
+                  fontSize: "0.75rem",
+                  marginBottom: "8px",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                TEAM NAME
+              </label>
+              <input
+                id="teamName"
+                ref={inputRef}
+                type="text"
+                className="input-cyber"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                placeholder="Enter your team name..."
+                maxLength={50}
+                disabled={loading}
+                autoComplete="off"
+                style={{ fontSize: "1rem" }}
+              />
+            </div>
+
+            {error && (
+              <div
+                className="mono"
+                style={{
+                  color: "var(--accent-red)",
+                  fontSize: "0.8rem",
+                  padding: "8px 12px",
+                  background: "rgba(255, 71, 87, 0.08)",
+                  border: "1px solid rgba(255, 71, 87, 0.2)",
+                }}
+              >
+                ✕ {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading || !teamName.trim()}
+              style={{
+                marginTop: "8px",
+                opacity: loading || !teamName.trim() ? 0.6 : 1,
+              }}
+            >
+              {loading ? "CONNECTING..." : "[ BEGIN INVESTIGATION ]"}
+            </button>
+          </form>
+        </div>
+
+        {/* Leaderboard link */}
+        <div style={{ marginTop: "24px" }}>
+          <a
+            href="/leaderboard"
+            className="mono"
+            style={{
+              color: "var(--text-muted)",
+              fontSize: "0.7rem",
+              letterSpacing: "0.15em",
+              textDecoration: "none",
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-cyan)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+          >
+            VIEW LEADERBOARD →
           </a>
         </div>
-      </main>
-    </div>
+
+        {/* Footer */}
+        <div
+          className="mono"
+          style={{
+            marginTop: "48px",
+            color: "var(--text-muted)",
+            fontSize: "0.6rem",
+            letterSpacing: "0.2em",
+            opacity: 0.5,
+          }}
+        >
+          BLACK BOX ASSOCIATION · CYBERSECURITY EVENT · {new Date().getFullYear()}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function CornerDecor() {
+  const style = {
+    position: "fixed" as const,
+    width: "80px",
+    height: "80px",
+    opacity: 0.3,
+  };
+
+  const lineStyle = {
+    position: "absolute" as const,
+    background: "var(--accent-cyan)",
+  };
+
+  return (
+    <>
+      {/* Top left */}
+      <div style={{ ...style, top: 20, left: 20 }}>
+        <div style={{ ...lineStyle, top: 0, left: 0, width: "30px", height: "1px" }} />
+        <div style={{ ...lineStyle, top: 0, left: 0, width: "1px", height: "30px" }} />
+      </div>
+      {/* Top right */}
+      <div style={{ ...style, top: 20, right: 20 }}>
+        <div style={{ ...lineStyle, top: 0, right: 0, width: "30px", height: "1px" }} />
+        <div style={{ ...lineStyle, top: 0, right: 0, width: "1px", height: "30px" }} />
+      </div>
+      {/* Bottom left */}
+      <div style={{ ...style, bottom: 20, left: 20 }}>
+        <div style={{ ...lineStyle, bottom: 0, left: 0, width: "30px", height: "1px" }} />
+        <div style={{ ...lineStyle, bottom: 0, left: 0, width: "1px", height: "30px" }} />
+      </div>
+      {/* Bottom right */}
+      <div style={{ ...style, bottom: 20, right: 20 }}>
+        <div style={{ ...lineStyle, bottom: 0, right: 0, width: "30px", height: "1px" }} />
+        <div style={{ ...lineStyle, bottom: 0, right: 0, width: "1px", height: "30px" }} />
+      </div>
+    </>
   );
 }
