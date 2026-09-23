@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Team {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  token       String    @unique @default(cuid())
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  progress   Progress[]
+  hintUsages HintUsage[]
+}
+
+model Progress {
+  id          String   @id @default(cuid())
+  teamId      String
+  challengeId String
+  completedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, challengeId])
+}
+
+model HintUsage {
+  id          String   @id @default(cuid())
+  teamId      String
+  challengeId String
+  hintIndex   Int
+  createdAt   DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, challengeId, hintIndex])
+}
