@@ -1,5 +1,5 @@
-# THE LOST FILE
-### A Cyber Mystery Game by Black Box Association
+# BLACKBOX
+### A Cyber Mystery Game by ASTRA Association
 
 A web-based interactive mystery game for cybersecurity events. Designed for students with **zero cybersecurity experience** — teaches concepts through discovery, not instruction.
 
