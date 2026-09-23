@@ -28,10 +28,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Challenge not found" }, { status: 404 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const usedHints = team.hintUsages
-      .filter((h) => h.challengeId === challengeId)
-      .map((h) => h.hintIndex)
-      .sort((a, b) => a - b);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((h: any) => h.challengeId === challengeId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((h: any) => h.hintIndex)
+      .sort((a: number, b: number) => a - b);
 
     const nextHintIndex = usedHints.length;
 

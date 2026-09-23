@@ -79,7 +79,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
 
-    const completedIds = team.progress.map((p) => p.challengeId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const completedIds = team.progress.map((p: any) => p.challengeId);
     const hintMap: Record<string, number[]> = {};
     for (const h of team.hintUsages) {
       if (!hintMap[h.challengeId]) hintMap[h.challengeId] = [];

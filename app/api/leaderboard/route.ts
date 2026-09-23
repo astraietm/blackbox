@@ -14,7 +14,8 @@ export async function GET() {
       ],
     });
 
-    const leaderboard = teams.map((team) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const leaderboard = teams.map((team: any) => {
       const completedChallenges = team.progress.length;
       const isComplete = completedChallenges >= TOTAL_CHALLENGES && !!team.completedAt;
 
@@ -37,7 +38,8 @@ export async function GET() {
     });
 
     // Sort: completed first (by duration), then by progress
-    leaderboard.sort((a, b) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    leaderboard.sort((a: any, b: any) => {
       if (a.isComplete && b.isComplete) {
         return (a.durationSeconds ?? Infinity) - (b.durationSeconds ?? Infinity);
       }

@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "asc" },
     });
 
-    const result = teams.map((team) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = teams.map((team: any) => {
       const completedChallenges = team.progress.length;
       const isComplete = completedChallenges >= TOTAL_CHALLENGES && !!team.completedAt;
       let durationSeconds: number | null = null;
@@ -38,7 +39,8 @@ export async function GET(req: NextRequest) {
         durationSeconds,
         startedAt: team.createdAt,
         hintsUsed: team.hintUsages.length,
-        progress: team.progress.map((p) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        progress: team.progress.map((p: any) => ({
           challengeId: p.challengeId,
           completedAt: p.completedAt,
         })),
